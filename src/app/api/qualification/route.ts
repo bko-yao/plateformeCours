@@ -56,29 +56,43 @@ export async function POST(req: Request) {
   const urgency = urgencyScore(scoreInput);
   const value = valueScore(scoreInput);
 
-  const lead = await prisma.lead.create({
-    data: {
-      contactName: d.contactName,
-      contactEmail: d.contactEmail,
-      contactPhone: d.contactPhone,
-      status: "qualified",
-      urgencyScore: urgency,
-      valueScore: value,
-      needProfile: {
-        create: {
-          subject: d.subject,
-          level: d.level,
-          city: d.city,
-          goal: d.goal,
-          mode: d.mode,
-          deadline: d.deadline,
-          budgetMax: d.budgetMax,
-          hoursPerWeek: d.hoursPerWeek,
-          notes: d.notes,
+  let lead;
+  try {
+    lead = await prisma.lead.create({
+      data: {
+        contactName: d.contactName,
+        contactEmail: d.contactEmail,
+        contactPhone: d.contactPhone,
+        status: "qualified",
+        urgencyScore: urgency,
+        valueScore: value,
+        needProfile: {
+          create: {
+            subject: d.subject,
+            level: d.level,
+            city: d.city,
+            goal: d.goal,
+            mode: d.mode,
+            deadline: d.deadline,
+            budgetMax: d.budgetMax,
+            hoursPerWeek: d.hoursPerWeek,
+            notes: d.notes,
+          },
         },
       },
-    },
-  });
+    });
+  } catch (err) {
+    const code = (err as { code?: string })?.code;
+    console.error("qualification: echec ecriture base", code, err);
+    // P2021 = table absente, P1001 = base injoignable.
+    const message =
+      code === "P2021"
+        ? "La base de donnees n'est pas initialisee (tables manquantes). Executez la migration / le db push."
+        : code === "P1001"
+          ? "Base de donnees injoignable. Verifiez DATABASE_URL."
+          : "Enregistrement impossible cote serveur.";
+    return NextResponse.json({ error: message, code: code ?? null }, { status: 503 });
+  }
 
   const teachers = await getAllTeachers();
   const matches = rankTeachers(

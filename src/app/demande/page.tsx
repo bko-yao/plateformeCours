@@ -69,8 +69,13 @@ export default function DemandePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Une erreur est survenue. Verifiez vos informations.");
-      setResult(await res.json());
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(
+          data?.error ?? "Une erreur est survenue. Verifiez vos informations.",
+        );
+      }
+      setResult(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur inconnue");
     } finally {

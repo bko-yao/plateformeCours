@@ -58,8 +58,10 @@ export function BookingForm({ teacherId, reste, credit, mode }: Props) {
           mode: chosenMode,
         }),
       });
-      if (!res.ok) throw new Error("La reservation a echoue. Verifiez vos informations.");
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.error ?? "La reservation a echoue. Verifiez vos informations.");
+      }
       // Reservation creee -> page de paiement (Stripe).
       window.location.href = `/paiement/${data.bookingId}`;
     } catch (e) {

@@ -39,19 +39,32 @@ export async function POST(req: Request) {
   const amount = Math.round((teacher.hourlyRate * d.durationMin) / 60);
   const reste = resteACharge(amount);
 
-  const booking = await prisma.booking.create({
-    data: {
-      teacherId: teacher.id,
-      studentName: d.studentName,
-      studentEmail: d.studentEmail,
-      slotStart: start,
-      slotEnd: end,
-      mode: d.mode,
-      status: "pending", // -> "paid" apres integration Stripe (phase 2)
-      amount,
-      restACharge: reste,
-    },
-  });
+  let booking;
+  try {
+    booking = await prisma.booking.create({
+      data: {
+        teacherId: teacher.id,
+        studentName: d.studentName,
+        studentEmail: d.studentEmail,
+        slotStart: start,
+        slotEnd: end,
+        mode: d.mode,
+        status: "pending", // -> "paid" apres paiement Stripe
+        amount,
+        restACharge: reste,
+      },
+    });
+  } catch (err) {
+    const code = (err as { code?: string })?.code;
+    console.error("bookings: echec ecriture base", code, err);
+    const message =
+      code === "P2021"
+        ? "La base de donnees n'est pas initialisee (tables manquantes)."
+        : code === "P1001"
+          ? "Base de donnees injoignable. Verifiez DATABASE_URL."
+          : "Reservation impossible cote serveur.";
+    return NextResponse.json({ error: message, code: code ?? null }, { status: 503 });
+  }
 
   // TODO(phase 2): creer une session de paiement Stripe Connect,
   // declarer la prestation a l'URSSAF (Avance Immediate), generer la facture.
