@@ -33,14 +33,13 @@ function upcomingSlots(): { iso: string; label: string }[] {
   return slots;
 }
 
-export function BookingForm({ teacherId, teacherName, reste, credit, mode }: Props) {
+export function BookingForm({ teacherId, reste, credit, mode }: Props) {
   const slots = useMemo(upcomingSlots, []);
   const [slot, setSlot] = useState(slots[0]?.iso ?? "");
   const [studentName, setStudentName] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
   const [chosenMode, setChosenMode] = useState(mode === "both" ? "visio" : mode);
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState<{ restACharge: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function submit() {
@@ -61,27 +60,12 @@ export function BookingForm({ teacherId, teacherName, reste, credit, mode }: Pro
       });
       if (!res.ok) throw new Error("La reservation a echoue. Verifiez vos informations.");
       const data = await res.json();
-      setDone({ restACharge: data.restACharge });
+      // Reservation creee -> page de paiement (Stripe).
+      window.location.href = `/paiement/${data.bookingId}`;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur inconnue");
-    } finally {
       setLoading(false);
     }
-  }
-
-  if (done) {
-    return (
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6">
-        <h2 className="text-lg font-semibold text-emerald-800">Reservation confirmee !</h2>
-        <p className="mt-2 text-sm text-emerald-700">
-          Votre cours avec {teacherName} est reserve. Vous ne paierez que{" "}
-          <strong>{euros(done.restACharge)}</strong> grace au credit d&apos;impot.
-        </p>
-        <p className="mt-2 text-xs text-emerald-600">
-          (Demo : le paiement Stripe et l&apos;Avance Immediate URSSAF seront branches en phase 2.)
-        </p>
-      </div>
-    );
   }
 
   return (
@@ -165,7 +149,7 @@ export function BookingForm({ teacherId, teacherName, reste, credit, mode }: Pro
         disabled={loading || !slot || !studentName || !studentEmail}
         className="mt-5 w-full rounded-lg bg-brand-600 px-5 py-3 font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
       >
-        {loading ? "Confirmation..." : `Confirmer et payer ${euros(reste)}`}
+        {loading ? "Redirection..." : `Continuer vers le paiement (${euros(reste)})`}
       </button>
     </div>
   );

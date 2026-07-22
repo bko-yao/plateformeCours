@@ -34,6 +34,7 @@ npm run dev                # http://localhost:3000
 | Decouverte SEO (matiere x niveau x ville) | `/cours/mathematiques/terminale/lyon` |
 | Qualification + matching (tunnel 3 etapes) | `/demande` |
 | Reservation + reste a charge | `/reserver/<id>` (via un resultat de matching) |
+| Paiement (Stripe Checkout) | `/paiement/<bookingId>` (apres une reservation) |
 | Back-office admin | `/admin` |
 
 ## Ce qui est reel vs. stub (MVP)
@@ -45,7 +46,8 @@ npm run dev                # http://localhost:3000
 | Scoring commercial (urgence / valeur) | reel (heuristique) |
 | Matching par regles (top 3 explique) | reel |
 | Reservation + calcul credit d'impot | reel |
-| Paiement Stripe / Avance Immediate URSSAF | **stub** (phase 2) |
+| Paiement Stripe Checkout (+ webhook, mode demo sans cle) | reel |
+| Avance Immediate URSSAF (50 % pris en charge) | **stub** (phase 2) |
 | Chatbot IA / qualification adaptative LLM | **stub** (phase 2) |
 | Facturation PDF / Factur-X | **stub** (phase 2) |
 
