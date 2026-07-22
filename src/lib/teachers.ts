@@ -42,11 +42,24 @@ function normalize(t: {
 }
 
 export async function getAllTeachers(): Promise<Teacher[]> {
-  const rows = await prisma.teacher.findMany({ orderBy: { rating: "desc" } });
-  return rows.map(normalize);
+  try {
+    const rows = await prisma.teacher.findMany({ orderBy: { rating: "desc" } });
+    return rows.map(normalize);
+  } catch (err) {
+    // La generation statique (build) ne doit pas echouer si la base n'est pas
+    // encore joignable/peuplee : on renvoie une liste vide, les pages se
+    // regenerent (ISR) une fois la base disponible.
+    console.error("getAllTeachers: base indisponible", err);
+    return [];
+  }
 }
 
 export async function getTeacher(id: string): Promise<Teacher | null> {
-  const t = await prisma.teacher.findUnique({ where: { id } });
-  return t ? normalize(t) : null;
+  try {
+    const t = await prisma.teacher.findUnique({ where: { id } });
+    return t ? normalize(t) : null;
+  } catch (err) {
+    console.error("getTeacher: base indisponible", err);
+    return null;
+  }
 }

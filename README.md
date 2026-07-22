@@ -8,17 +8,22 @@ matching par regles, reservation et back-office admin, avec le calcul du
 ## Stack
 
 - **Next.js 14** (App Router) + **TypeScript** + **Tailwind CSS**
-- **Prisma** ORM — SQLite en dev (zero installation), PostgreSQL en prod
+- **Prisma** ORM — **PostgreSQL** (dev et prod)
 - **Zod** pour la validation des entrees API
 
 ## Demarrage
 
 ```bash
+# 1. Une base Postgres locale (exemple Docker) :
+docker run --name preceptio-db -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=preceptio -p 5432:5432 -d postgres:16
+
+# 2. L'application :
 npm install
-cp .env.example .env
-npm run db:push     # cree le schema SQLite (prisma/dev.db)
-npm run db:seed     # insere des professeurs de demonstration
-npm run dev         # http://localhost:3000
+cp .env.example .env       # DATABASE_URL pointe deja sur la base ci-dessus
+npm run db:push            # cree le schema dans Postgres
+npm run db:seed            # insere des professeurs de demonstration
+npm run dev                # http://localhost:3000
 ```
 
 ## Parcours a tester
@@ -69,8 +74,8 @@ prisma/
   seed.ts        # professeurs de demonstration
 ```
 
-## Passage en production (Postgres)
+## Deploiement
 
-Dans `prisma/schema.prisma`, remplacer `provider = "sqlite"` par
-`postgresql`, convertir les champs listes (`subjects`, `levels`, `cities`)
-en `String[]`, et pointer `DATABASE_URL` vers l'instance Postgres.
+Voir [`DEPLOY.md`](./DEPLOY.md) : import du repo sur Vercel + base Postgres
+managee (Neon / Vercel Postgres). Le schema est deja en PostgreSQL, aucune
+modification de code n'est requise pour deployer.

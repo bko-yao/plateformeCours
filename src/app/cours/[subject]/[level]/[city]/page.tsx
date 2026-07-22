@@ -14,6 +14,8 @@ import { resteACharge } from "@/lib/pricing";
 
 type Params = { subject: string; level: string; city: string };
 
+export const revalidate = 3600; // ISR : pages SEO regenerees chaque heure
+
 // Pages programmatiques : matiere x niveau x ville. Pre-generees au build
 // pour un SEO optimal (voir CONCEPTION.md, section 3.1).
 export function generateStaticParams() {

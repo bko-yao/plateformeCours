@@ -1,17 +1,19 @@
 // Schema Prisma - MVP plateforme de cours particuliers.
 //
-// Le scaffold utilise SQLite pour tourner sans serveur de base de donnees.
-// En production, basculer sur PostgreSQL :
-//   - provider = "postgresql"
-//   - remplacer les champs JSON-string (subjects, levels, cities) par String[]
-//   - activer pgvector pour le RAG (voir CONCEPTION.md, section 4/5)
+// Base cible : PostgreSQL (dev et prod).
+// Les listes (subjects, levels, cities) sont stockees en JSON-string : ce
+// choix est portable et suffit au MVP. Evolution possible : champs String[]
+// natifs Postgres + pgvector pour le RAG (voir CONCEPTION.md, section 4/5).
+//
+// Demarrage local rapide : voir README (docker run postgres) ou toute base
+// Postgres managee (Neon, Vercel Postgres) via DATABASE_URL.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

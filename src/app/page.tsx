@@ -3,6 +3,8 @@ import { getAllTeachers } from "@/lib/teachers";
 import { TeacherCard } from "@/components/TeacherCard";
 import { SUBJECTS, LEVELS } from "@/lib/catalog";
 
+export const revalidate = 3600; // ISR : rafraichit la liste des profs chaque heure
+
 export default async function HomePage() {
   const teachers = (await getAllTeachers()).slice(0, 3);
 
