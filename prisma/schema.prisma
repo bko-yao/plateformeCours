@@ -1,0 +1,95 @@
+// Schema Prisma - MVP plateforme de cours particuliers.
+//
+// Base cible : PostgreSQL (dev et prod).
+// Les listes (subjects, levels, cities) sont stockees en JSON-string : ce
+// choix est portable et suffit au MVP. Evolution possible : champs String[]
+// natifs Postgres + pgvector pour le RAG (voir CONCEPTION.md, section 4/5).
+//
+// Demarrage local rapide : voir README (docker run postgres) ou toute base
+// Postgres managee (Neon, Vercel Postgres) via DATABASE_URL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Teacher {
+  id           String         @id @default(cuid())
+  firstName    String
+  lastName     String
+  bio          String
+  // Listes stockees en JSON (contrainte SQLite). En Postgres : String[].
+  subjects     String // JSON: ["mathematiques","physique"]
+  levels       String // JSON: ["college","lycee"]
+  cities       String // JSON: ["lyon","villeurbanne"]
+  mode         String // "presentiel" | "visio" | "both"
+  hourlyRate   Int // euros / heure (tarif affiche, avant credit d'impot)
+  rating       Float          @default(0)
+  reviewsCount Int            @default(0)
+  verified     Boolean        @default(false)
+  photoUrl     String?
+  availabilities Availability[]
+  bookings     Booking[]
+  createdAt    DateTime       @default(now())
+}
+
+model Availability {
+  id        String  @id @default(cuid())
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId String
+  weekday   Int // 0 = dimanche ... 6 = samedi
+  startMin  Int // minutes depuis minuit (ex: 17h = 1020)
+  endMin    Int
+
+  @@index([teacherId])
+}
+
+model Lead {
+  id           String       @id @default(cuid())
+  contactName  String
+  contactEmail String
+  contactPhone String?
+  source       String       @default("web")
+  status       String       @default("new") // new | qualified | matched | won | lost
+  urgencyScore Int          @default(0) // 0-100
+  valueScore   Int          @default(0) // 0-100
+  needProfile  NeedProfile?
+  createdAt    DateTime     @default(now())
+}
+
+model NeedProfile {
+  id           String   @id @default(cuid())
+  lead         Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId       String   @unique
+  subject      String
+  level        String
+  city         String
+  goal         String // "rattrapage" | "excellence" | "examen"
+  deadline     String? // ISO date ou libelle
+  budgetMax    Int? // euros/heure max
+  mode         String // "presentiel" | "visio" | "both"
+  hoursPerWeek Int      @default(1)
+  notes        String?
+  createdAt    DateTime @default(now())
+}
+
+model Booking {
+  id           String   @id @default(cuid())
+  teacher      Teacher  @relation(fields: [teacherId], references: [id])
+  teacherId    String
+  studentName  String
+  studentEmail String
+  slotStart    DateTime
+  slotEnd      DateTime
+  mode         String
+  status       String   @default("pending") // pending | confirmed | paid | cancelled
+  amount       Int // total euros (tarif * duree)
+  restACharge  Int // reste a charge apres credit d'impot 50%
+  createdAt    DateTime @default(now())
+
+  @@index([teacherId])
+}
